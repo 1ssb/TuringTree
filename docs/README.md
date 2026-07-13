@@ -1,14 +1,12 @@
 # RagIndex — Documentation
 
 Welcome! This `docs/` folder is the **single place that explains the whole
-project in plain English**: what it is, what has already been built, how every
-piece works, and what is still left to do.
+project in plain English**: what it is, how every piece works, and the design
+choices behind it.
 
 It is written for someone who is **new to the project** — you should be able to
 read these top-to-bottom and understand the entire thing without digging through
 code first.
-
-> Last updated: **2026-06-23** · Branch: **`ui-ux`** · Latest commit: **`7206e11`**
 
 ---
 
@@ -16,8 +14,10 @@ code first.
 
 | If you want to… | Read this |
 | --- | --- |
-| Understand **what is finished** and **what is still pending** | [PROJECT_STATUS.md](PROJECT_STATUS.md) |
 | Understand **how the project is built** (every file, the data flow, design choices) | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| See the **confidence scoring** in depth | [confidence_scoring.md](confidence_scoring.md) |
+| Read the **benchmark** method & results | [benchmark.md](benchmark.md) |
+| Build the **desktop app** | [desktop.md](desktop.md) |
 | Just **run it** (setup + commands) | the top-level [../README.md](../README.md) |
 
 ---
@@ -44,13 +44,9 @@ flowchart LR
 
 ---
 
-## Status at a glance
+## Where to go next
 
-- ✅ **Core workspace built** — config, 3 sockets, 4 scripts, reproducible setup.
-- ✅ **Fully local** — migrated from cloud OpenAI to onboard Ollama + Qwen (no keys).
-- ✅ **Dataset consolidated** — a 30k-row (~13 MB) sample committed in-repo; runs offline.
-- ✅ **Published** — pushed to GitHub (`origin/main`).
-- 🔜 **UI/UX** — this `ui-ux` branch is where a user interface will be added. **None exists yet.**
-- 🔜 **Tests, pinned model version, full dataset** — see [PROJECT_STATUS.md](PROJECT_STATUS.md).
-
-See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the complete, detailed list.
+- **Run it:** the top-level [../README.md](../README.md).
+- **Understand it:** [ARCHITECTURE.md](ARCHITECTURE.md).
+- **The confidence layer:** [confidence_scoring.md](confidence_scoring.md).
+- **Benchmarks & method:** [benchmark.md](benchmark.md).

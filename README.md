@@ -78,7 +78,7 @@ flowchart LR
 
 ---
 
-## Evaluate in ~5 minutes (for reviewers & judges)
+## Quick start (~5 minutes)
 
 Two commands set everything up and open the app — **no API keys, no cloud, no GPU.**
 
@@ -136,7 +136,7 @@ Then, in the app, do these three things:
 - [The "socket" architecture](#the-socket-architecture)
 - [Retrieval confidence scoring](#retrieval-confidence-scoring)
 - [Benchmarks vs a vector-DB baseline](#benchmarks-vs-a-vector-db-baseline)
-- [Findings, validation & test results](#findings-validation--test-results)
+- [Validation & tests](#validation--tests)
 - [Bundled dataset & branch indexing](#bundled-dataset--branch-indexing)
 - [Project layout](#project-layout)
 - [Team](#team)
@@ -552,60 +552,34 @@ metrics (cross‑contamination, source entropy, Gini) and results:
 
 ---
 
-## Findings, validation & test results
+## Validation & tests
 
-This release is validated three ways — a scientific **benchmark**, an
-**integration & stress** pass, and a full **build-and-test gate** run before
-shipping. The detailed reports live in [docs/](docs):
-[benchmark.md](docs/benchmark.md) and [findings.md](docs/findings.md).
+Every push and pull request runs the CI pipeline
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
 
-### Release gate (run on this build)
+- **Backend** — `pytest` over the socket + API suite (fully mocked; no Ollama or
+  vendored model required).
+- **Frontend** — `tsc --noEmit` type-check, a `vite` production build, and the
+  `vitest` unit suite.
+- **Containers** — the backend and frontend Docker images are built so the stack
+  stays reproducible.
 
-Four checks, all green — re-run them before tagging any release:
+**CodeQL** scans Python and JavaScript/TypeScript for security issues and
+**Dependabot** keeps dependencies patched. Run the same checks locally:
 
-| Gate | Command | Result |
-| --- | --- | --- |
-| Backend imports | `python -c "import config, sockets"` | ✅ OK |
-| Backend test suite | `python -m pytest tests/` | ✅ **53 passed** |
-| Frontend type-check + build | `npm ci && npm run build` | ✅ clean — 1881 modules, code-split |
-| Frontend unit tests | `npm test` | ✅ **15 passed** |
+```bash
+pytest -q                                                # backend
+cd frontend && npm ci && npm run build && npm run test   # frontend
+```
 
-> **Build note (found while hardening this release).** `npm run build` runs
-> `tsc --noEmit` over the whole `src/` tree — including the `*.test.tsx` files,
-> which import `vitest` and `@testing-library/react`. The frontend's **dev
-> dependencies must therefore be present**: always `npm ci` before building. A
-> production-only install (`--omit=dev`) makes the type-check fail on the
-> test-only imports even though the app itself is fine.
+> **Build note.** `npm run build` type-checks the whole `src/` tree, including the
+> `*.test.tsx` files, so the dev dependencies must be present — always `npm ci`
+> (not `--omit=dev`) before building.
 
-### Integration & stress findings
-
-The performance/infra workstream (async indexing, content-hash caching, Docker,
-frontend perf) and the SQLite dataset store + ingestion workstream were integrated
-on top of the confidence **score card**. Full report: [docs/findings.md](docs/findings.md).
-
-- **One merge conflict**, in `sockets/rag_socket.py`, resolved as a *union* that
-  keeps both the mtime-memoized store cache and the cross-process ingestion lock.
-- **Validated on real data:** backend suite green, live SQLite build + FTS queries
-  correct, and a confidence **+86.2 / 100** separation (on-topic 93.7 vs off-topic 7.5).
-- **Bug found & fixed — Windows store-lock crash.** On a OneDrive-synced workspace a
-  just-released lock file is briefly *delete-pending*, so `os.open(O_EXCL)` raised
-  `PermissionError` instead of `FileExistsError`. The acquire loop now retries on
-  both with a hard deadline. After the fix: **80/80** concurrent upserts — zero
-  loss, zero duplicates — and ~1360 FTS searches/s.
-
-### Benchmark headline
-
-Same embeddings and **same recall** as a vector DB (accuracy@5 = 1.00), but it
-**abstains on 100 % of off-topic questions** the vector DB answers silently wrong —
-a **+79.5 / 100** confidence separation. Details:
-[Benchmarks vs a vector-DB baseline](#benchmarks-vs-a-vector-db-baseline) ·
+For the scientific evaluation — **same recall as a vector DB, but it abstains on
+100% of off-topic questions** (a **+79.5 / 100** confidence separation) — see
+[Benchmarks vs a vector-DB baseline](#benchmarks-vs-a-vector-db-baseline) and
 [docs/benchmark.md](docs/benchmark.md).
-
-### Continuous integration
-
-GitHub Actions CI has been **removed** in favour of the one-command local release
-gate above, and the repository ships as a single clean `main`. Those four checks
-are the contract: run them, then tag.
 
 ---
 

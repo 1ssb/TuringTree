@@ -1,8 +1,7 @@
 # Architecture — how RagIndex is built
 
 This document walks through **every part of the project that exists today** and
-explains *what it does* and *why it is built that way*. It is the companion to
-[PROJECT_STATUS.md](PROJECT_STATUS.md) (which focuses on *done vs. pending*).
+explains *what it does* and *why it is built that way*.
 
 ---
 
@@ -249,10 +248,8 @@ exact same local environment on any machine — no keys, no cloud.
 ## 9. Git / publishing state
 
 - **Remote:** `origin` → `https://github.com/1ssb/TuringTree.git`
-- **Release:** the deliverable ships as a single clean commit on `main`, tagged
-  **`v1.0.0`**, under the **MIT License** (see [LICENSE](../LICENSE)).
+- **Release:** published on `main` under the **MIT License** (see
+  [LICENSE](../LICENSE)); tagged versions are on the
+  [Releases page](https://github.com/1ssb/TuringTree/releases).
 - **Reproducible from scratch:** `vendor/` and `data/` are git-ignored and rebuilt
   by `setup.sh`, so the repo stays small and every checkout reproduces the same env.
-
-For the full done/pending breakdown, continue to
-[PROJECT_STATUS.md](PROJECT_STATUS.md).
