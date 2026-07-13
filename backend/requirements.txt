@@ -19,7 +19,7 @@ fastapi==0.115.0
 uvicorn[standard]==0.30.6
 
 # Multipart form parsing for file uploads (POST /api/index/build and /api/ingest).
-python-multipart==0.0.9
+python-multipart==0.0.31
 
 # Uploaded-folder indexing: DOCX text extraction (PDF text is extracted with
 # PyMuPDF, which is pinned in the root requirements.txt).

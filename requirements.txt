@@ -22,7 +22,7 @@ watchdog>=4.0.0
 # === Shared utilities =======================================================
 # Pinned to 1.0.1 because litellm==1.83.7 requires exactly that version. (Upstream
 # PageIndex lists 1.2.2, but that conflicts with litellm under a strict resolver.)
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 
 # === Topological-confidence apparatus (sockets/topo_confidence_socket.py) ====
 # Studies the SHAPE of a retrieval's support: relevance filtration -> persistence
