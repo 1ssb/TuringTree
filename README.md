@@ -687,8 +687,8 @@ A team effort by the **Turing Tree** interns, developed as part of the
 
 - **[Subhransu S. (Rudra) Bhattacharjee](https://github.com/1ssb)**
 - **Himanshu Singh**
-- **Yeredla Koushik Reddy**
-- **Jayesh RL**
+- **[Yeredla Koushik Reddy](https://github.com/ykr080805)**
+- **[Jayesh RL](https://github.com/Aspect022)**
 
 ---
 
