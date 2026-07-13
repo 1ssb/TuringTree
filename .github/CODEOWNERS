@@ -1,0 +1,10 @@
+# Code owners for Turing Tree.
+#
+# The repository owner (@1ssb) is the required reviewer for every change.
+# This is ENFORCED once branch protection on `main` has
+# "Require a pull request before merging" + "Require review from Code Owners".
+#
+# Teammates push a feature branch and open a PR; it can only merge into `main`
+# after @1ssb approves.
+
+*       @1ssb
