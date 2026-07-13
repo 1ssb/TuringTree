@@ -9,7 +9,7 @@ huggingface-hub>=0.24.0
 # === Model socket: PageIndex deps (pinned to match vendor/PageIndex) ========
 # These mirror vendor/PageIndex/requirements.txt so the vendored model behaves
 # exactly as upstream intends — important for reproducibility across teammates.
-litellm==1.83.7
+litellm==1.84.0
 pymupdf==1.26.4
 PyPDF2==3.0.1
 pyyaml==6.0.2
@@ -20,9 +20,9 @@ pyyaml==6.0.2
 watchdog>=4.0.0
 
 # === Shared utilities =======================================================
-# Pinned to 1.0.1 because litellm==1.83.7 requires exactly that version. (Upstream
-# PageIndex lists 1.2.2, but that conflicts with litellm under a strict resolver.)
-python-dotenv==1.0.1
+# Bumped to 1.2.2 (matches upstream PageIndex) together with the litellm 1.84.x
+# bump, which no longer needs the old 1.0.1 pin. Resolves a security advisory.
+python-dotenv==1.2.2
 
 # === Topological-confidence apparatus (sockets/topo_confidence_socket.py) ====
 # Studies the SHAPE of a retrieval's support: relevance filtration -> persistence
