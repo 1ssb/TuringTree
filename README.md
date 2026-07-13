@@ -686,7 +686,7 @@ A team effort by the **Turing Tree** interns, developed as part of the
 **Microsoft Global Intern Hackathon 2026**:
 
 - **[Subhransu S. (Rudra) Bhattacharjee](https://github.com/1ssb)**
-- **Himanshu Singh**
+- **[Himanshu Singh](https://github.com/himanshuIndia)**
 - **[Yeredla Koushik Reddy](https://github.com/ykr080805)**
 - **[Jayesh RL](https://github.com/Aspect022)**
 
