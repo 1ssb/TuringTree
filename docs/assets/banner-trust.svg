@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 256" width="1280" height="256" fill="none" role="img" aria-label="Trustworthy by default — cited sources, 0 to 100 confidence, answer review or abstain, zero silently-wrong answers">
+  <defs>
+    <linearGradient id="tru-bg" x1="0" y1="0" x2="1280" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0a0617" />
+      <stop offset="0.5" stop-color="#130a28" />
+      <stop offset="1" stop-color="#0a0617" />
+    </linearGradient>
+    <linearGradient id="tru-grad" x1="40" y1="80" x2="124" y2="196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1" />
+      <stop offset="0.5" stop-color="#a855f7" />
+      <stop offset="1" stop-color="#fcd34d" />
+    </linearGradient>
+    <radialGradient id="tru-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 128) rotate(0) scale(360 220)">
+      <stop stop-color="#34d399" stop-opacity="0.22" />
+      <stop offset="1" stop-color="#34d399" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect x="2" y="2" width="1276" height="252" rx="22" fill="url(#tru-bg)" />
+  <rect x="2" y="2" width="1276" height="252" rx="22" fill="url(#tru-glow)" />
+  <rect x="2.75" y="2.75" width="1274.5" height="250.5" rx="21.25" stroke="#a78bfa" stroke-opacity="0.22" stroke-width="1.5" />
+
+  <!-- decorative confidence gauge ticks (right) -->
+  <g opacity="0.6">
+    <path d="M1018 188 A96 96 0 0 1 1210 188" stroke="#a78bfa" stroke-opacity="0.22" stroke-width="2" fill="none" />
+    <path d="M1018 188 A96 96 0 0 1 1170 110" stroke="url(#tru-grad)" stroke-width="4" fill="none" stroke-linecap="round" />
+    <circle cx="1114" cy="92" r="4.4" fill="url(#tru-grad)" />
+  </g>
+  <text x="1114" y="176" text-anchor="middle" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="34" font-weight="700" fill="#f3effb">92</text>
+  <text x="1114" y="198" text-anchor="middle" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#34d399" letter-spacing="1.5">ANSWER</text>
+
+  <!-- shield + check icon -->
+  <path d="M84 78 C72 85 60 88 47 90 L47 140 C47 170 63 188 84 198 C105 188 121 170 121 140 L121 90 C108 88 96 85 84 78 Z"
+        fill="#34d399" fill-opacity="0.08" stroke="url(#tru-grad)" stroke-width="2.5" />
+  <path d="M69 132 l11 11 l20 -23" stroke="#34d399" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+  <!-- copy -->
+  <text x="170" y="112" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#f3effb" letter-spacing="-0.5">Trustworthy by default</text>
+  <text x="171" y="148" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="19" font-weight="400" fill="#b9b4c7">Every answer is grounded in your sources, scored 0–100, and willing to abstain.</text>
+
+  <!-- chips -->
+  <g font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#dcd6f2">
+    <g>
+      <rect x="170" y="172" width="138" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="239" y="193" text-anchor="middle">Cited sources</text>
+    </g>
+    <g>
+      <rect x="320" y="172" width="168" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="404" y="193" text-anchor="middle">0–100 confidence score</text>
+    </g>
+    <g>
+      <rect x="500" y="172" width="228" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="614" y="193" text-anchor="middle">Answer · Review · Abstain</text>
+    </g>
+    <g>
+      <rect x="740" y="172" width="174" height="32" rx="16" fill="#34d399" fill-opacity="0.10" stroke="#34d399" stroke-opacity="0.34" />
+      <text x="827" y="193" text-anchor="middle" fill="#a7f3d0">0% silently-wrong</text>
+    </g>
+  </g>
+</svg>

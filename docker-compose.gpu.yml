@@ -1,0 +1,31 @@
+# GPU override for the Ollama runtime (NVIDIA).
+#
+# Requires on the HOST:
+#   - an NVIDIA GPU + a recent driver
+#   - the NVIDIA Container Toolkit configured for Docker:
+#     https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+#
+# Usage (Compose merges this file on top of the base one):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+#
+# Verify the GPU is visible inside the runtime:
+#   docker compose exec ollama nvidia-smi
+#
+# CPU-only hosts should simply omit this file — the base stack runs as-is.
+
+services:
+  ollama:
+    # Reserve the host GPU(s) for the Ollama container. Ollama auto-detects CUDA
+    # and offloads the models onto the GPU; no application code changes needed.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      # Optional: force a max number of GPU layers (unset = as many as fit in VRAM).
+      # OLLAMA_NUM_GPU: "999"

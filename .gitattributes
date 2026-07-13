@@ -1,0 +1,25 @@
+# Normalize line endings across platforms so clones are byte-stable.
+# Text files are stored with LF in the repo; Git converts on checkout as needed.
+* text=auto eol=lf
+
+# Shell scripts MUST stay LF or they break on Linux/macOS.
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows scripts stay CRLF.
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+
+# Treat common binary assets as binary (no EOL conversion, no diffs).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.parquet binary
+*.mp4 binary
+*.woff binary
+*.woff2 binary

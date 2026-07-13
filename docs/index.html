@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turing Tree — vectorless, on-device RAG that knows when it's wrong</title>
+    <meta
+      name="description"
+      content="Turing Tree is a vectorless, reasoning-based RAG that runs entirely on your machine. Grounded answers with a 0–100 confidence score that abstains when unsure."
+    />
+    <meta name="theme-color" content="#070310" />
+    <link rel="icon" type="image/svg+xml" href="assets/turing-tree-mark.svg" />
+
+    <!-- Open Graph / link unfurls -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Turing Tree — RAG that knows when it's wrong" />
+    <meta
+      property="og:description"
+      content="Vectorless, reasoning-based, 100% on-device. Same recall as a vector DB — but it abstains instead of guessing."
+    />
+    <meta property="og:image" content="assets/banner-trust.svg" />
+
+    <!-- Type: General Sans (display) + Geist (body), matching the product UI -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap"
+    />
+
+    <style>
+      :root {
+        --bg: #070310;
+        --bg-soft: #0c0720;
+        --surface: #110c22;
+        --surface-2: #160f2c;
+        --fg: #f4f2ef;
+        --muted: #b9b4c7;
+        --faint: #837e95;
+        --accent: #a78bfa;
+        --accent-strong: #8b5cf6;
+        --emerald: #34d399;
+        --line: rgba(167, 139, 250, 0.16);
+        --line-soft: rgba(167, 139, 250, 0.1);
+        --grad: linear-gradient(100deg, #6366f1, #a855f7 52%, #fcd34d);
+        --maxw: 1120px;
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Geist", system-ui, -apple-system, sans-serif;
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overflow-x: hidden;
+      }
+
+      /* Ambient cosmic field — two violet glows + a faint grid, all fixed. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background:
+          radial-gradient(60% 50% at 18% 0%, rgba(124, 92, 240, 0.22), transparent 70%),
+          radial-gradient(50% 45% at 92% 8%, rgba(168, 85, 247, 0.14), transparent 70%),
+          radial-gradient(40% 40% at 50% 100%, rgba(99, 102, 241, 0.1), transparent 70%);
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background-image:
+          linear-gradient(rgba(167, 139, 250, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(167, 139, 250, 0.045) 1px, transparent 1px);
+        background-size: 64px 64px;
+        -webkit-mask-image: radial-gradient(75% 60% at 50% 0%, #000 35%, transparent 80%);
+        mask-image: radial-gradient(75% 60% at 50% 0%, #000 35%, transparent 80%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: 100%;
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      .section {
+        padding: 92px 0;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      .eyebrow {
+        font-family: "Geist", sans-serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .section-head {
+        max-width: 640px;
+        margin-bottom: 44px;
+      }
+      .section-head h2 {
+        font-family: "General Sans", system-ui, sans-serif;
+        font-weight: 600;
+        font-size: clamp(28px, 4vw, 40px);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 14px 0 14px;
+      }
+      .section-head p {
+        color: var(--muted);
+        margin: 0;
+        font-size: 18px;
+      }
+
+      /* ---- Nav ------------------------------------------------------------ */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        background: rgba(7, 3, 16, 0.72);
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 66px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+      }
+      .brand svg {
+        width: 30px;
+        height: 30px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+      }
+      .nav-link {
+        color: var(--muted);
+        font-size: 14.5px;
+        font-weight: 500;
+        transition: color 0.18s ease;
+      }
+      .nav-link:hover {
+        color: var(--fg);
+      }
+      .nav-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.32);
+        color: var(--fg);
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.18s ease, transform 0.18s ease;
+      }
+      .nav-cta:hover {
+        background: rgba(167, 139, 250, 0.2);
+        transform: translateY(-1px);
+      }
+
+      /* ---- Hero ----------------------------------------------------------- */
+      .hero {
+        text-align: center;
+        padding: 96px 0 84px;
+        position: relative;
+      }
+      .hero .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 7px 15px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(167, 139, 250, 0.06);
+      }
+      .hero .eyebrow .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--emerald);
+        box-shadow: 0 0 10px 1px var(--emerald);
+      }
+      .hero-title {
+        font-family: "General Sans", system-ui, sans-serif;
+        font-weight: 600;
+        font-size: clamp(72px, 15vw, 184px);
+        line-height: 0.94;
+        letter-spacing: -0.03em;
+        margin: 28px 0 0;
+      }
+      .hero-title .tree {
+        background: var(--grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .tagline {
+        font-family: "General Sans", sans-serif;
+        font-weight: 500;
+        font-size: clamp(19px, 2.4vw, 25px);
+        color: var(--fg);
+        margin: 26px 0 0;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        max-width: 620px;
+        margin: 18px auto 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+      .cta-row {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 38px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-size: 15.5px;
+        font-weight: 600;
+        font-family: "Geist", sans-serif;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+      .btn svg {
+        width: 17px;
+        height: 17px;
+      }
+      .btn-primary {
+        position: relative;
+        color: #140a2b;
+        background: linear-gradient(100deg, #c4b5fd, #a78bfa 45%, #fcd34d 130%);
+        box-shadow: 0 10px 34px -10px rgba(167, 139, 250, 0.7);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px -10px rgba(167, 139, 250, 0.85);
+      }
+      .btn-ghost {
+        color: var(--fg);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--line);
+      }
+      .btn-ghost:hover {
+        transform: translateY(-2px);
+        background: rgba(167, 139, 250, 0.12);
+        border-color: rgba(167, 139, 250, 0.4);
+      }
+
+      /* ---- Proof stat strip ---------------------------------------------- */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--line-soft);
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-top: 12px;
+      }
+      .stat {
+        background: var(--bg);
+        padding: 30px 26px;
+        text-align: center;
+      }
+      .stat-num {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: 38px;
+        letter-spacing: -0.02em;
+        background: var(--grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .stat-label {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+
+      /* ---- Benchmark story ----------------------------------------------- */
+      .story-line {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: clamp(26px, 4vw, 40px);
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        max-width: 900px;
+      }
+      .story-line .hl {
+        background: var(--grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .story-sub {
+        color: var(--muted);
+        max-width: 720px;
+        margin-top: 18px;
+        font-size: 18px;
+      }
+      .story-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 44px;
+      }
+      .metric {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 24px 22px;
+      }
+      .metric-num {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: 34px;
+        letter-spacing: -0.02em;
+      }
+      .metric-label {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 8px;
+        line-height: 1.45;
+      }
+      .versus {
+        display: flex;
+        gap: 16px;
+        margin-top: 28px;
+        flex-wrap: wrap;
+      }
+      .versus-card {
+        flex: 1 1 280px;
+        border-radius: 14px;
+        padding: 20px 22px;
+        font-size: 15.5px;
+        border: 1px solid var(--line);
+      }
+      .versus-card.bad {
+        background: rgba(244, 63, 94, 0.05);
+        border-color: rgba(244, 63, 94, 0.22);
+      }
+      .versus-card.good {
+        background: rgba(52, 211, 153, 0.05);
+        border-color: rgba(52, 211, 153, 0.26);
+      }
+      .versus-tag {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .versus-card.bad .versus-tag {
+        color: #fb7185;
+      }
+      .versus-card.good .versus-tag {
+        color: var(--emerald);
+      }
+      .versus-card p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .micro-note {
+        margin-top: 22px;
+        font-size: 13.5px;
+        color: var(--faint);
+      }
+      .micro-note a {
+        color: var(--accent);
+        border-bottom: 1px solid rgba(167, 139, 250, 0.35);
+      }
+
+      /* ---- Pillars -------------------------------------------------------- */
+      .pillars {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+      .pillar {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 30px 28px;
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .pillar:hover {
+        transform: translateY(-4px);
+        border-color: rgba(167, 139, 250, 0.4);
+        background: var(--surface-2);
+      }
+      .pillar-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid var(--line);
+        margin-bottom: 18px;
+      }
+      .pillar-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke: var(--accent);
+      }
+      .pillar h3 {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        margin: 0 0 10px;
+      }
+      .pillar p {
+        color: var(--muted);
+        margin: 0;
+        font-size: 15.5px;
+      }
+
+      /* ---- Assurance banners --------------------------------------------- */
+      .banners {
+        display: grid;
+        gap: 18px;
+      }
+      .banner-img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1280 / 256;
+        display: block;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+      }
+
+      /* ---- How it works --------------------------------------------------- */
+      .steps {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .step {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 26px 24px;
+        display: flex;
+        flex-direction: column;
+      }
+      .step-k {
+        font-family: "General Sans", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent);
+        letter-spacing: 0.08em;
+      }
+      .step h3 {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: 19px;
+        margin: 6px 0 10px;
+      }
+      .step p {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 0 0 18px;
+      }
+      .step-visual {
+        margin-top: auto;
+        display: grid;
+        place-items: center;
+        min-height: 132px;
+        border-radius: 12px;
+        background: radial-gradient(120% 100% at 50% 0%, rgba(167, 139, 250, 0.08), transparent 70%);
+        border: 1px solid var(--line-soft);
+        padding: 16px;
+      }
+      .connector {
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+        opacity: 0.7;
+      }
+      .connector svg {
+        width: 26px;
+        height: 26px;
+      }
+      .answer-mock {
+        width: 100%;
+        text-align: left;
+        font-size: 13px;
+      }
+      .answer-mock .bubble {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 12px 12px 12px 4px;
+        padding: 12px 13px;
+        color: var(--fg);
+        line-height: 1.45;
+      }
+      .answer-mock .meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .conf-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: rgba(52, 211, 153, 0.12);
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        color: #6ee7b7;
+      }
+      .src-chip {
+        font-size: 11px;
+        color: var(--muted);
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      /* ---- Quickstart ----------------------------------------------------- */
+      .quickstart-wrap {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 40px;
+        align-items: center;
+      }
+      .terminal {
+        background: #0a0617;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+      }
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line-soft);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .tdot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+      }
+      .terminal pre {
+        margin: 0;
+        padding: 22px 20px;
+        font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 13.5px;
+        line-height: 1.85;
+        color: #d7d2e6;
+        overflow-x: auto;
+      }
+      .terminal .c {
+        color: var(--faint);
+      }
+      .terminal .p {
+        color: var(--emerald);
+      }
+      .terminal .a {
+        color: var(--accent);
+      }
+
+      /* ---- CTA band ------------------------------------------------------- */
+      .cta-band {
+        text-align: center;
+        background:
+          radial-gradient(60% 120% at 50% 0%, rgba(124, 92, 240, 0.22), transparent 70%),
+          var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        padding: 64px 32px;
+      }
+      .cta-band h2 {
+        font-family: "General Sans", sans-serif;
+        font-weight: 600;
+        font-size: clamp(28px, 4vw, 42px);
+        letter-spacing: -0.02em;
+        margin: 0 0 14px;
+      }
+      .cta-band p {
+        color: var(--muted);
+        max-width: 540px;
+        margin: 0 auto 32px;
+        font-size: 18px;
+      }
+
+      /* ---- Footer --------------------------------------------------------- */
+      .footer {
+        border-top: 1px solid var(--line-soft);
+        padding: 44px 0 56px;
+      }
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .footer .brand svg {
+        width: 26px;
+        height: 26px;
+      }
+      .footer-links {
+        display: flex;
+        gap: 26px;
+        flex-wrap: wrap;
+      }
+      .footer-links a {
+        color: var(--muted);
+        font-size: 14.5px;
+        transition: color 0.18s ease;
+      }
+      .footer-links a:hover {
+        color: var(--fg);
+      }
+      .footer-credit {
+        margin-top: 26px;
+        color: var(--faint);
+        font-size: 13.5px;
+      }
+
+      /* ---- Entrance + a11y ----------------------------------------------- */
+      .reveal {
+        animation: fadeUp 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .d1 { animation-delay: 0.05s; }
+      .d2 { animation-delay: 0.13s; }
+      .d3 { animation-delay: 0.21s; }
+      .d4 { animation-delay: 0.29s; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 920px) {
+        .nav-links .nav-link { display: none; }
+        .stats { grid-template-columns: repeat(2, 1fr); }
+        .story-grid { grid-template-columns: repeat(2, 1fr); }
+        .pillars { grid-template-columns: 1fr; }
+        .steps { grid-template-columns: 1fr; }
+        .connector { transform: rotate(90deg); padding: 4px 0; }
+        .quickstart-wrap { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 520px) {
+        .section { padding: 64px 0; }
+        .stats, .story-grid { grid-template-columns: 1fr; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .reveal { animation: none; }
+        * { transition-duration: 0.001ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="#top" aria-label="Turing Tree home">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M10.5 29h11M16 26v-8M16 18l-6-4.5M16 18l6-4.5M10 13.5l-3.5-5.5M10 13.5l3.5-5.5M22 13.5l-3.5-5.5M22 13.5l3.5-5.5" stroke="#e7e3f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="16" cy="26" r="2" fill="#e7e3f5" />
+            <circle cx="6.5" cy="8" r="1.85" fill="url(#ng)" />
+            <circle cx="13.5" cy="8" r="1.85" fill="url(#ng)" />
+            <circle cx="18.5" cy="8" r="1.85" fill="url(#ng)" />
+            <circle cx="25.5" cy="8" r="1.85" fill="url(#ng)" />
+            <defs>
+              <linearGradient id="ng" x1="4" y1="6" x2="28" y2="10" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366f1" /><stop offset="0.5" stop-color="#a855f7" /><stop offset="1" stop-color="#fcd34d" />
+              </linearGradient>
+            </defs>
+          </svg>
+          Turing Tree
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#story">Benchmark</a>
+          <a class="nav-link" href="#how">How it works</a>
+          <a class="nav-link" href="#trust">Security</a>
+          <a class="nav-link" href="#start">Get started</a>
+          <a class="nav-cta" href="https://github.com/1ssb/TuringTree" target="_blank" rel="noopener">
+            GitHub
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- Hero -->
+      <section class="hero container">
+        <span class="eyebrow reveal"><span class="dot"></span>Open source · Vectorless on-device RAG</span>
+        <h1 class="hero-title reveal d1"><span>Turing</span><br /><span class="tree">Tree</span></h1>
+        <p class="tagline reveal d2">No vectors. No chunking. No blind trust.</p>
+        <p class="lede reveal d2">
+          A vectorless, reasoning-based RAG that runs entirely on your machine. Drop in your documents
+          and ask — every answer comes back grounded in your sources, with a confidence score that tells
+          you when to trust it.
+        </p>
+        <div class="cta-row reveal d3">
+          <a class="btn btn-primary" href="#start">
+            Get started
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/1ssb/TuringTree" target="_blank" rel="noopener">
+            View on GitHub
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- Proof strip -->
+      <section class="container" aria-label="At a glance">
+        <div class="stats reveal">
+          <div class="stat"><div class="stat-num">100%</div><div class="stat-label">on-device</div></div>
+          <div class="stat"><div class="stat-num">0%</div><div class="stat-label">silently-wrong answers</div></div>
+          <div class="stat"><div class="stat-num">0</div><div class="stat-label">API keys · no cloud</div></div>
+          <div class="stat"><div class="stat-num">5</div><div class="stat-label">document formats in</div></div>
+        </div>
+      </section>
+
+      <!-- Benchmark story -->
+      <section class="section" id="story">
+        <div class="container">
+          <span class="eyebrow">The benchmark story</span>
+          <p class="story-line">
+            Same recall as a vector database —<br />
+            <span class="hl">but it knows when it's wrong.</span>
+          </p>
+          <p class="story-sub">
+            In a controlled run on web-crawled Wikipedia science articles, Turing Tree retrieved with the
+            <em>same embeddings</em> as a classic vector DB — so it found exactly what the vector DB found.
+            Then it flagged every off-topic question the vector DB answered silently and wrongly.
+          </p>
+
+          <div class="story-grid">
+            <div class="metric">
+              <div class="metric-num" style="color: var(--fg)">1.00</div>
+              <div class="metric-label">accuracy@5 — identical retrieval to a vector DB (0.00 cross-contamination)</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" style="background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;">100%</div>
+              <div class="metric-label">of off-topic questions abstained — the vector DB flagged 0%</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" style="color: var(--emerald)">+79.5</div>
+              <div class="metric-label">confidence separation (of 100) between trustworthy and confused retrievals</div>
+            </div>
+            <div class="metric">
+              <div class="metric-num" style="color: var(--fg)">198×</div>
+              <div class="metric-label">faster re-index of unchanged content via the content-hash cache</div>
+            </div>
+          </div>
+
+          <div class="versus">
+            <div class="versus-card bad">
+              <div class="versus-tag">Vector DB baseline</div>
+              <p>Returns a confident-looking top-k for <strong>every</strong> question — including ones the corpus can't answer. Off-topic queries come back silently wrong.</p>
+            </div>
+            <div class="versus-card good">
+              <div class="versus-tag">Turing Tree</div>
+              <p>Measures the <em>shape</em> of each retrieval and <strong>abstains on 100%</strong> of off-topic queries — while never abstaining on a real in-corpus one.</p>
+            </div>
+          </div>
+
+          <p class="micro-note">
+            Measured: 6 docs / 90 chunks, local Ollama, top-k = 5. Reproduce with
+            <code>python scripts/benchmark_rag.py</code> — full method &amp; caveats in
+            <a href="https://github.com/1ssb/TuringTree/blob/main/docs/benchmark.md">docs/benchmark.md</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Pillars -->
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Why it's different</span>
+            <h2>A retriever that reasons, scores, and abstains.</h2>
+            <p>Three choices set Turing Tree apart from a normal RAG chatbot.</p>
+          </div>
+          <div class="pillars">
+            <div class="pillar">
+              <div class="pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6m0 0-4 3m4-3 4 3M6 12v4l6 4 6-4v-4" /><circle cx="12" cy="3" r="1.4" fill="currentColor" stroke="none" /></svg>
+              </div>
+              <h3>Vectorless retrieval</h3>
+              <p>No vector database. Each document becomes a hierarchical reasoning tree the model navigates by thinking — not nearest-neighbour lookup.</p>
+            </div>
+            <div class="pillar">
+              <div class="pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 9 9" /><path d="M12 7v5l3 2" /></svg>
+              </div>
+              <h3>Confidence you can act on</h3>
+              <p>Every answer carries a 0–100 score and a verdict — Answer, Review, or Abstain — with the drivers behind it. Off-topic questions are flagged, not faked.</p>
+            </div>
+            <div class="pillar">
+              <div class="pillar-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M9 12l2 2 4-4" /></svg>
+              </div>
+              <h3>100% on-device</h3>
+              <p>Local Qwen models via Ollama. Nothing you upload or ask ever leaves your computer. One command to set up, one to run — no API keys, no GPU.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assurance banners (Security + Trustworthy) -->
+      <section class="section" id="trust">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Secure &amp; trustworthy by construction</span>
+            <h2>Privacy isn't a setting — it's the architecture.</h2>
+            <p>Because everything runs locally and every answer is scored, both safety and reliability are properties of the design, not promises.</p>
+          </div>
+          <div class="banners">
+            <img class="banner-img" src="assets/banner-security.svg" alt="Secure by design — 100% on-device, no cloud, no API keys, local Qwen models via Ollama" />
+            <img class="banner-img" src="assets/banner-trust.svg" alt="Trustworthy by default — cited sources, 0 to 100 confidence, answer / review / abstain, 0% silently-wrong" />
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="section" id="how">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">How it works</span>
+            <h2>From your documents to a grounded, scored answer.</h2>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <span class="step-k">01</span>
+              <h3>Your documents</h3>
+              <p>Upload files or a whole folder — PDF, DOCX, Markdown, HTML, or text.</p>
+              <div class="step-visual">
+                <svg viewBox="0 0 64 64" width="74" height="74" fill="none" aria-hidden="true">
+                  <rect x="16" y="10" width="28" height="36" rx="3" fill="#160f2c" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1.6" />
+                  <rect x="20" y="18" width="28" height="36" rx="3" fill="#1c1438" stroke="#a78bfa" stroke-opacity="0.7" stroke-width="1.6" />
+                  <path d="M26 28h16M26 34h16M26 40h10" stroke="#c9b6ff" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </div>
+            </div>
+            <div class="connector"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></div>
+            <div class="step">
+              <span class="step-k">02</span>
+              <h3>Reasoning tree</h3>
+              <p>Each document is turned into a table-of-contents tree the local model reasons over.</p>
+              <div class="step-visual">
+                <svg viewBox="0 0 64 64" width="92" height="92" fill="none" aria-hidden="true">
+                  <path d="M21 58h22M32 52v-16M32 36l-12 -9M32 36l12 -9M20 27l-7 -11M20 27l7 -11M44 27l-7 -11M44 27l7 -11" stroke="#d8d2ee" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="32" cy="52" r="4" fill="#d8d2ee" />
+                  <circle cx="13" cy="16" r="3.7" fill="url(#hg)" />
+                  <circle cx="27" cy="16" r="3.7" fill="url(#hg)" />
+                  <circle cx="37" cy="16" r="3.7" fill="url(#hg)" />
+                  <circle cx="51" cy="16" r="3.7" fill="url(#hg)" />
+                  <defs>
+                    <linearGradient id="hg" x1="8" y1="12" x2="56" y2="20" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#6366f1" /><stop offset="0.5" stop-color="#a855f7" /><stop offset="1" stop-color="#fcd34d" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+            <div class="connector"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></div>
+            <div class="step">
+              <span class="step-k">03</span>
+              <h3>Grounded answer</h3>
+              <p>You get a cited answer and a confidence verdict — or an honest abstain.</p>
+              <div class="step-visual">
+                <div class="answer-mock">
+                  <div class="bubble">Photosynthesis converts light into chemical energy stored as glucose.</div>
+                  <div class="meta">
+                    <span class="conf-pill">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11" /></svg>
+                      92 · ANSWER
+                    </span>
+                    <span class="src-chip">photosynthesis.md</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quickstart -->
+      <section class="section" id="start">
+        <div class="container quickstart-wrap">
+          <div>
+            <span class="eyebrow">Get started</span>
+            <h2 style="font-family:'General Sans',sans-serif;font-weight:600;font-size:clamp(28px,4vw,40px);letter-spacing:-0.02em;line-height:1.1;margin:14px 0 14px;">Two commands. No keys. No cloud.</h2>
+            <p style="color:var(--muted);margin:0 0 24px;font-size:18px;">Clone, run setup once, then launch. It builds the UI the first time and opens your browser at <code>127.0.0.1:8765</code>.</p>
+            <a class="btn btn-primary" href="https://github.com/1ssb/TuringTree" target="_blank" rel="noopener">
+              View the source
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M12 2A10 10 0 0 0 8.8 21.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.300000000000001-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7 3.6 3.6 0 0 1 .1-2.7s.8-.3 2.7 1a9.3 9.3 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.8v2.6c0 .3.2.6.7.5A10 10 0 0 0 12 2Z" /></svg>
+            </a>
+          </div>
+          <div class="terminal" aria-label="Setup commands">
+            <div class="terminal-bar">
+              <span class="tdot" style="background:#fb7185"></span>
+              <span class="tdot" style="background:#fcd34d"></span>
+              <span class="tdot" style="background:#34d399"></span>
+            </div>
+<pre><span class="c"># 1 — clone</span>
+git clone https://github.com/1ssb/TuringTree RagIndex
+cd RagIndex
+
+<span class="c"># 2 — set up everything (venv, deps, models, Ollama)</span>
+<span class="p">$</span> bash scripts/setup.sh
+<span class="c">#   Windows: powershell -File scripts\setup.ps1</span>
+
+<span class="c"># 3 — run (opens <span class="a">http://127.0.0.1:8765</span>)</span>
+<span class="p">$</span> ./run.sh
+<span class="c">#   Windows: run.bat</span>
+</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA band -->
+      <section class="section">
+        <div class="container">
+          <div class="cta-band">
+            <h2>Explore the source on GitHub.</h2>
+            <p>Turing Tree is open source. Clone it, run it locally, and read the full method and benchmarks.</p>
+            <a class="btn btn-primary" href="https://github.com/1ssb/TuringTree" target="_blank" rel="noopener">
+              Open on GitHub
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-inner">
+          <a class="brand" href="#top" aria-label="Turing Tree">
+            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path d="M10.5 29h11M16 26v-8M16 18l-6-4.5M16 18l6-4.5M10 13.5l-3.5-5.5M10 13.5l3.5-5.5M22 13.5l-3.5-5.5M22 13.5l3.5-5.5" stroke="#e7e3f5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="16" cy="26" r="2" fill="#e7e3f5" />
+              <circle cx="6.5" cy="8" r="1.85" fill="url(#fg)" />
+              <circle cx="13.5" cy="8" r="1.85" fill="url(#fg)" />
+              <circle cx="18.5" cy="8" r="1.85" fill="url(#fg)" />
+              <circle cx="25.5" cy="8" r="1.85" fill="url(#fg)" />
+              <defs>
+                <linearGradient id="fg" x1="4" y1="6" x2="28" y2="10" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#6366f1" /><stop offset="0.5" stop-color="#a855f7" /><stop offset="1" stop-color="#fcd34d" />
+                </linearGradient>
+              </defs>
+            </svg>
+            Turing Tree
+          </a>
+          <nav class="footer-links" aria-label="Footer">
+            <a href="https://github.com/1ssb/TuringTree" target="_blank" rel="noopener">GitHub</a>
+            <a href="#story">Benchmark</a>
+            <a href="#start">Get started</a>
+          </nav>
+        </div>
+        <p class="footer-credit">No vectors. No chunking. No blind trust.</p>
+        <p class="footer-credit" style="margin-top: 6px;">Team — Himanshu Singh · Yeredla Koushik Reddy · Rudra Bhattacharjee · Jayesh RL</p>
+      </div>
+    </footer>
+  </body>
+</html>

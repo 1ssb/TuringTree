@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 256" width="1280" height="256" fill="none" role="img" aria-label="Secure by design — 100% on-device, no cloud, no API keys, local models via Ollama">
+  <defs>
+    <linearGradient id="sec-bg" x1="0" y1="0" x2="1280" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0a0617" />
+      <stop offset="0.5" stop-color="#130a28" />
+      <stop offset="1" stop-color="#0a0617" />
+    </linearGradient>
+    <linearGradient id="sec-grad" x1="40" y1="80" x2="124" y2="196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1" />
+      <stop offset="0.5" stop-color="#a855f7" />
+      <stop offset="1" stop-color="#fcd34d" />
+    </linearGradient>
+    <radialGradient id="sec-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 128) rotate(0) scale(360 220)">
+      <stop stop-color="#7c5cf0" stop-opacity="0.32" />
+      <stop offset="1" stop-color="#7c5cf0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect x="2" y="2" width="1276" height="252" rx="22" fill="url(#sec-bg)" />
+  <rect x="2" y="2" width="1276" height="252" rx="22" fill="url(#sec-glow)" />
+  <rect x="2.75" y="2.75" width="1274.5" height="250.5" rx="21.25" stroke="#a78bfa" stroke-opacity="0.22" stroke-width="1.5" />
+
+  <!-- decorative reasoning-tree constellation (right) -->
+  <g stroke="#a78bfa" stroke-opacity="0.18" stroke-width="1.4">
+    <path d="M1040 196 L1040 150 L1000 110 M1040 150 L1090 116 M1090 116 L1062 78 M1090 116 L1132 92 M1040 150 L1150 158" />
+  </g>
+  <g opacity="0.62">
+    <circle cx="1040" cy="196" r="3.4" fill="#a78bfa" />
+    <circle cx="1000" cy="110" r="4.2" fill="url(#sec-grad)" />
+    <circle cx="1062" cy="78" r="4.2" fill="url(#sec-grad)" />
+    <circle cx="1132" cy="92" r="4.2" fill="url(#sec-grad)" />
+    <circle cx="1150" cy="158" r="4.2" fill="url(#sec-grad)" />
+  </g>
+
+  <!-- shield + lock icon -->
+  <path d="M84 78 C72 85 60 88 47 90 L47 140 C47 170 63 188 84 198 C105 188 121 170 121 140 L121 90 C108 88 96 85 84 78 Z"
+        fill="#a78bfa" fill-opacity="0.10" stroke="url(#sec-grad)" stroke-width="2.5" />
+  <path d="M76 130 v-7 a8 8 0 0 1 16 0 v7" stroke="#c9b6ff" stroke-width="3" stroke-linecap="round" />
+  <rect x="71" y="130" width="26" height="22" rx="5" fill="#a78bfa" />
+  <circle cx="84" cy="140" r="2.6" fill="#160c2e" />
+  <rect x="83" y="141" width="2" height="6" rx="1" fill="#160c2e" />
+
+  <!-- copy -->
+  <text x="170" y="112" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#f3effb" letter-spacing="-0.5">Secure by design</text>
+  <text x="171" y="148" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="19" font-weight="400" fill="#b9b4c7">Your documents never leave your machine — nothing is uploaded, nothing is phoned home.</text>
+
+  <!-- chips -->
+  <g font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#dcd6f2">
+    <g>
+      <rect x="170" y="172" width="156" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="248" y="193" text-anchor="middle">100% on-device</text>
+    </g>
+    <g>
+      <rect x="338" y="172" width="104" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="390" y="193" text-anchor="middle">No cloud</text>
+    </g>
+    <g>
+      <rect x="454" y="172" width="124" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="516" y="193" text-anchor="middle">No API keys</text>
+    </g>
+    <g>
+      <rect x="590" y="172" width="196" height="32" rx="16" fill="#a78bfa" fill-opacity="0.10" stroke="#a78bfa" stroke-opacity="0.30" />
+      <text x="688" y="193" text-anchor="middle">Local Qwen models · Ollama</text>
+    </g>
+  </g>
+</svg>

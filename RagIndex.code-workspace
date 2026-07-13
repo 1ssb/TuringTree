@@ -1,0 +1,56 @@
+{
+  // ---------------------------------------------------------------------
+  // RagIndex multi-root workspace.
+  //
+  // Two "roots" are plugged in side by side, like two sockets on a wall:
+  //   1. "RagIndex"               -> our own code (sockets, scripts, config)
+  //   2. "PageIndex (model)"      -> the vendored model, cloned by setup.sh
+  //
+  // The vendored model is hidden from the first root (files.exclude) so it only
+  // shows up once, as its own clean root. On a fresh checkout the second root is
+  // empty until you run scripts/setup.sh — that is expected.
+  // ---------------------------------------------------------------------
+  "folders": [
+    {
+      "name": "RagIndex",
+      "path": "."
+    },
+    {
+      "name": "PageIndex (model)",
+      "path": "vendor/PageIndex"
+    }
+  ],
+  "settings": {
+    // Hide generated / vendored things from the main root's file tree.
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".venv": true,
+      "vendor": true
+    },
+    // Keep search fast and relevant.
+    "search.exclude": {
+      ".venv": true,
+      "data": true,
+      "vendor/PageIndex/.git": true
+    },
+    "files.watcherExclude": {
+      "**/.venv/**": true,
+      "**/data/**": true
+    },
+    // Use the project virtual environment created by scripts/setup.sh.
+    "python.defaultInterpreterPath": "${workspaceFolder:RagIndex}/.venv/bin/python",
+    // Let Pylance resolve `import pageindex` from the vendored model.
+    "python.analysis.extraPaths": [
+      "./vendor/PageIndex"
+    ],
+    "python.terminal.activateEnvironment": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-toolsai.jupyter"
+    ]
+  }
+}

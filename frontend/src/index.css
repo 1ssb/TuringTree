@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================================
+   Theme tokens
+   ---------------------------------------------------------------------------
+   Stored as raw "H S L" triplets (no hsl() wrapper) so Tailwind can apply
+   opacity modifiers, e.g. text-foreground/90 -> hsl(var(--foreground) / 0.9).
+   =========================================================================== */
+@layer base {
+  :root {
+    --background: 260 87% 3%; /* deep cosmic base         */
+    --foreground: 40 6% 95%; /* off-white                */
+    --hero-sub: 40 6% 82%; /* muted hero sub text      */
+
+    /* Elevation scale — app surfaces lift off the cosmic base (a faint indigo
+       slate, never pure black) so cards/inputs read as "floating". */
+    --surface-1: 258 32% 8%; /* cards / panels           */
+    --surface-2: 256 30% 12%; /* inputs, chips, hover     */
+    --surface-3: 255 28% 16%; /* active / selected        */
+    --line: 258 40% 72%; /* violet-tinted hairline (used with /alpha) */
+    --muted: 250 12% 72%; /* secondary text            */
+    --accent: 255 92% 76%; /* interactive violet (#a78bfa) */
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Geist Sans", system-ui, sans-serif;
+  }
+}
+
+/* ===========================================================================
+   Liquid-glass utility — a frosted panel with a soft inner highlight and a
+   1.4px gradient border ring (drawn with a masked ::before).
+   =========================================================================== */
+@layer components {
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* ===========================================================================
+   Thin, translucent scrollbars — used by the neutral upload + chat screens.
+   (Pseudo-elements live outside @layer so they aren't purged.)
+   =========================================================================== */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ===========================================================================
+   Accessibility floor — visible keyboard focus + reduced-motion respect.
+   =========================================================================== */
+:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.85);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

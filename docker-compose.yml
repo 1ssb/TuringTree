@@ -1,0 +1,94 @@
+# RagIndex — Turing Tree — full local stack in three services:
+#   ollama   : the local LLM runtime (serves the qwen2.5 chat + qwen3 embeddings)
+#   backend  : the FastAPI app over the sockets (vectorless RAG, branch search)
+#   frontend : the Vite-built UI served by nginx (also proxies /api -> backend)
+#
+# ---------------------------------------------------------------------------
+# Quick start (CPU — works everywhere):
+#   docker compose up -d --build
+#   # the one-shot 'ollama-pull' service downloads the models automatically,
+#   # then open http://localhost:5173
+#
+# GPU (NVIDIA — optional; needs the NVIDIA Container Toolkit on the host):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+#
+# Everything runs locally — no API keys. Models live in the named 'ollama'
+# volume, so they are pulled only once. Override models/ports with a .env file
+# (see .env.example).
+# ---------------------------------------------------------------------------
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+    restart: unless-stopped
+
+  # One-shot helper: waits for Ollama, pulls the chat + embedding models into the
+  # shared volume, then exits. Makes `up` turnkey — no manual `ollama pull`.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      RAGINDEX_CHAT_TAG: ${RAGINDEX_CHAT_TAG:-qwen2.5:3b-instruct}
+      RAGINDEX_EMBED_TAG: ${RAGINDEX_EMBED_TAG:-qwen3-embedding:0.6b}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "Pulling chat model: $${RAGINDEX_CHAT_TAG}"
+        ollama pull "$${RAGINDEX_CHAT_TAG}"
+        echo "Pulling embedding model: $${RAGINDEX_EMBED_TAG}"
+        ollama pull "$${RAGINDEX_EMBED_TAG}"
+        echo "All models ready."
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      RAGINDEX_CHAT_TAG: ${RAGINDEX_CHAT_TAG:-qwen2.5:3b-instruct}
+      RAGINDEX_EMBED_TAG: ${RAGINDEX_EMBED_TAG:-qwen3-embedding:0.6b}
+      RAGINDEX_INDEX_TAG: ${RAGINDEX_INDEX_TAG:-qwen2.5:3b-instruct}
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-pull:
+        condition: service_completed_successfully
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ragdata:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5)\" || exit 1"]
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    restart: unless-stopped
+
+volumes:
+  ollama:
+  ragdata:

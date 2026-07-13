@@ -1,0 +1,16 @@
+# Keep the backend build context small and reproducible. The frontend builds
+# from its own context (./frontend), and vendor/ is cloned inside the image.
+.git
+.gitignore
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.mypy_cache
+data
+incoming
+vendor
+frontend
+*.code-workspace
+.env
+docs

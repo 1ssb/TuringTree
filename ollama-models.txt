@@ -1,0 +1,26 @@
+# ---------------------------------------------------------------------------
+# Local Ollama models for RagIndex.
+#
+# These are the EXACT model tags every teammate pulls, so the project behaves
+# the same on every machine. scripts/setup.{sh,ps1,bat,py} reads this file and
+# runs `ollama pull <tag>` for each non-comment line (text after a `#` is ignored).
+#
+# Want different models? Change the tags here AND the matching defaults in
+# config.py (OLLAMA_CHAT_TAG / OLLAMA_EMBED_TAG), then re-run setup.
+# ---------------------------------------------------------------------------
+
+# Chat + index model: a small, fast instruct model used BOTH to build the document
+# "table-of-contents" tree AND to answer questions. Qwen2.5-Instruct follows
+# instructions well and returns clean JSON (we deliberately avoid "thinking"
+# models, whose extra tags break PageIndex's JSON). Using ONE small model for the
+# whole pipeline keeps answers fast on CPU and only one model resident in memory.
+qwen2.5:3b-instruct
+
+# Embedding model the git-branch semantic indexer uses to turn text into vectors.
+# Small, fast, and retrieval-tuned — from the same Qwen family.
+qwen3-embedding:0.6b
+
+# OPTIONAL — higher-quality but slower answers on CPU. Pull this and set
+# RAGINDEX_CHAT_TAG=qwen2.5:7b-instruct to use it for chat/answering. Left
+# commented out so the default install stays lean and fast.
+# qwen2.5:7b-instruct

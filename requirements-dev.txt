@@ -1,0 +1,17 @@
+# Development / test dependencies for the RagIndex workspace.
+#
+#     .venv\Scripts\python -m pip install -r requirements-dev.txt
+#
+# Runtime deps live in requirements.txt. These are only needed to run the test
+# suite (tests/) and local checks. httpx (used by FastAPI's TestClient) is pulled
+# in transitively by the runtime deps, so pytest is all we add here.
+#
+# The score suite (tests/test_score_api.py) is pytest-compatible AND has a
+# zero-dependency fallback runner (`python tests/test_score_api.py`), so pytest is
+# optional but recommended for CI.
+pytest>=8.0
+
+# === Desktop packaging =====================================================
+# Only needed to FREEZE the app into a self-contained build (scripts/build_desktop.py
+# / packaging/ragindex.spec). Not required to run from source or to run the tests.
+pyinstaller>=6.6

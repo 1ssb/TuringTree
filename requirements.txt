@@ -1,0 +1,48 @@
+# Python dependencies for the RagIndex workspace.
+# Install into the project virtual environment:  pip install -r requirements.txt
+# (scripts/setup.sh does this for you.)
+
+# === Dataset socket: Hugging Face dataset access ===========================
+datasets>=2.20.0
+huggingface-hub>=0.24.0
+
+# === Model socket: PageIndex deps (pinned to match vendor/PageIndex) ========
+# These mirror vendor/PageIndex/requirements.txt so the vendored model behaves
+# exactly as upstream intends — important for reproducibility across teammates.
+litellm==1.83.7
+pymupdf==1.26.4
+PyPDF2==3.0.1
+pyyaml==6.0.2
+
+# === Live ingestion socket: watchdog folder watcher =========================
+# Watches the incoming/ folder and indexes documents the moment they are dropped
+# in (see scripts/watch_incoming.py). Pure Python and cross-platform.
+watchdog>=4.0.0
+
+# === Shared utilities =======================================================
+# Pinned to 1.0.1 because litellm==1.83.7 requires exactly that version. (Upstream
+# PageIndex lists 1.2.2, but that conflicts with litellm under a strict resolver.)
+python-dotenv==1.0.1
+
+# === Topological-confidence apparatus (sockets/topo_confidence_socket.py) ====
+# Studies the SHAPE of a retrieval's support: relevance filtration -> persistence
+# barcode -> confidence scores, plus sheaf consistency, stability and curvature.
+numpy>=1.26
+scipy>=1.11
+networkx>=3.2
+# Optional extras (Vietoris-Rips H1 "epistemic holes" + persistence-diagram
+# distances) live in requirements-optional.txt. They are NOT installed by default
+# because `ripser` compiles Cython/C++ and needs a C/C++ build toolchain, which a
+# clean Windows box often lacks. The socket guards these imports and degrades
+# gracefully without them. Enable with:  pip install -r requirements-optional.txt
+
+ripser>=0.6.4
+persim>=0.3.2
+
+# Note: the local LLM runtime is Ollama (installed separately by scripts/setup.sh,
+# NOT a pip package). PageIndex and the branch indexer reach it through LiteLLM
+# above using the ollama_chat/ and ollama/ providers — no API keys required.
+#
+# The branch-index socket (sockets/branch_index_socket.py) can also run with ONLY
+# the Python standard library + git: if Ollama is not running it automatically
+# falls back to an offline embedding, so it works even before anything is set up.

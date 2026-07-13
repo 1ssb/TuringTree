@@ -1,0 +1,42 @@
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Secrets ---------------------------------------------------------------
+.env
+
+# --- Generated data & caches (rebuilt locally) -----------------------------
+data/
+results/
+
+# --- Desktop build artifacts (PyInstaller output + smoke-test data) ---------
+build/
+dist/
+.smoke-data/
+
+# --- Live ingestion: user-dropped documents (not part of the repo) ----------
+incoming/
+
+# --- Runtime logs (e.g. PageIndex PDF processing) ---------------------------
+logs/
+
+# --- Vendored "mother" repository ------------------------------------------
+# PageIndex is cloned locally by scripts/setup.sh and is its OWN git repo, so we
+# never commit it into ours. Teammates reproduce it by running the setup script.
+vendor/
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+.idea/
+*.swp
+
+# --- SuperDesign / agent-skill tooling (local only, not part of the app) ----
+# Installed by the SuperDesign CLI and `npx skills add`. These are design/agent
+# tooling artifacts (skill files + design drafts/context), not application code,
+# so we keep them out of the repository.
+.agents/
+.superdesign/
+skills-lock.json

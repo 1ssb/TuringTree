@@ -1,0 +1,26 @@
+# Backend dependencies for the RagIndex API.
+#
+# Install into the SAME virtual environment as the root project so the API can
+# reuse the existing sockets (which need datasets / pyarrow / litellm, etc.):
+#
+#     source ../.venv/bin/activate        # the root project's venv
+#     pip install -r requirements.txt
+#
+# Then run the API from the repo root:
+#
+#     uvicorn backend.app.main:app --reload --port 8000
+#
+# The vectorless-RAG chat endpoint (/api/chat) additionally needs a running
+# Ollama server and the vendored PageIndex (both provided by scripts/setup.sh),
+# plus the index built once via POST /api/index/build. It pulls litellm and the
+# PageIndex deps from the root requirements.txt — nothing extra to pin here.
+
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Multipart form parsing for file uploads (POST /api/index/build and /api/ingest).
+python-multipart==0.0.9
+
+# Uploaded-folder indexing: DOCX text extraction (PDF text is extracted with
+# PyMuPDF, which is pinned in the root requirements.txt).
+python-docx==1.1.2

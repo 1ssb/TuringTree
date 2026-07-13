@@ -1,0 +1,19 @@
+# Optional extras for the topological-confidence apparatus
+# (sockets/topo_confidence_socket.py).
+#
+# These are NOT required to run RagIndex. The socket guards their imports and
+# degrades gracefully when they are absent — the Vietoris-Rips H1 ("epistemic
+# holes") and persistence-diagram distance features are simply skipped.
+#
+# They are kept out of requirements.txt because `ripser` compiles Cython/C++ and
+# therefore needs a C/C++ build toolchain at install time, which a clean Windows
+# machine often lacks (the build fails without a C++ build toolchain / MSVC).
+#
+# Enable the extra features with:
+#     pip install -r requirements-optional.txt
+#
+# On Windows, if the build fails, install the "Desktop development with C++"
+# workload from the Visual Studio Build Tools, then re-run the command above.
+
+ripser>=0.6.4
+persim>=0.3.2
