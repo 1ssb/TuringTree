@@ -347,35 +347,59 @@ together** (Ctrl-C stops both):
 python scripts/dev.py        # backend :8000 (FastAPI, /docs)  +  frontend :5173 (Vite)
 ```
 
-### Run in containers (Docker)
+### Run with Docker (recommended)
 
-The repo ships a full stack — **Ollama + FastAPI backend + nginx-served
-frontend** — brought up with one command. A one-shot `ollama-pull` service
-downloads the models automatically and healthchecks gate the startup order
-(`ollama` → models pulled → `backend` → `frontend`), so the first `up` is
-turnkey:
+The repo ships a full containerised stack — **Ollama + FastAPI backend +
+nginx-served frontend**. A one-shot `ollama-pull` service downloads the models
+automatically and healthchecks gate the startup order
+(`ollama` → models pulled → `backend` → `frontend`), so the first run is turnkey.
+
+**Step 1 — Install Docker** (bundles Docker Compose v2):
+
+| OS | Get it |
+| --- | --- |
+| Windows / macOS | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| Linux | [Docker Engine](https://docs.docker.com/engine/install/) + [Compose plugin](https://docs.docker.com/compose/install/linux/) |
+
+Verify with `docker --version` and `docker compose version`.
+
+**Step 2a — Run on CPU** (works everywhere, no GPU needed):
 
 ```bash
-# CPU (works everywhere)
 docker compose up -d --build
-# then open http://localhost:5173
+# first run pulls ~3 GB of models, then open http://localhost:5173
 ```
 
-**GPU (NVIDIA, optional).** If the host has an NVIDIA GPU and the
-[NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html),
-merge the GPU override — Ollama then offloads the models onto the GPU with no
-code changes:
+**Step 2b — Run on GPU** (NVIDIA, optional, much faster inference). Install these
+**in order**, then use the GPU override file:
+
+1. **NVIDIA GPU driver** — [nvidia.com/Download](https://www.nvidia.com/Download/index.aspx)
+   (Windows) or your distro's package (Linux). Confirm with `nvidia-smi`.
+2. **Windows only:** enable [WSL2](https://learn.microsoft.com/windows/wsl/install)
+   and use Docker Desktop's WSL2 backend — the GPU passes through automatically
+   ([CUDA on WSL guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)).
+3. **NVIDIA Container Toolkit** —
+   [install guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+   (Linux hosts; on Windows it comes with Docker Desktop's WSL2 GPU support).
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
-docker compose exec ollama nvidia-smi   # verify the GPU is visible
+docker compose exec ollama nvidia-smi   # confirm the GPU is visible in-container
 ```
 
-Models live in the named `ollama` volume (pulled once); the index persists in
-the `ragdata` volume. Override ports and model tags via a `.env` file
-(`FRONTEND_PORT`, `BACKEND_PORT`, `OLLAMA_PORT`, `RAGINDEX_CHAT_TAG`,
-`RAGINDEX_EMBED_TAG` — see [.env.example](.env.example)). Tear down with
-`docker compose down` (add `-v` to also drop the model/data volumes).
+**Manage the stack:**
+
+```bash
+docker compose logs -f     # follow logs
+docker compose ps          # services + health status
+docker compose down        # stop (keeps the model/data volumes)
+docker compose down -v     # stop and delete the ollama + ragdata volumes
+```
+
+**Configure** ports and models with a `.env` file (copy from
+[.env.example](.env.example)): `FRONTEND_PORT`, `BACKEND_PORT`, `OLLAMA_PORT`,
+`RAGINDEX_CHAT_TAG`, `RAGINDEX_EMBED_TAG`. Models live in the named `ollama`
+volume (pulled once); the index persists in the `ragdata` volume.
 
 ### Build a standalone desktop app
 
@@ -658,9 +682,10 @@ RagIndex/  (the desktop app is branded "Turing Tree")
 
 ## Team
 
-Built by the **Turing Tree** team:
+A team effort by the **Turing Tree** interns, developed as part of the
+**Microsoft Global Intern Hackathon 2026**:
 
-- **[Subhransu S. (Rudra) Bhattacharjee](https://github.com/1ssb)** — Project lead
+- **[Subhransu S. (Rudra) Bhattacharjee](https://github.com/1ssb)**
 - **Himanshu Singh**
 - **Yeredla Koushik Reddy**
 - **Jayesh RL**
@@ -671,7 +696,8 @@ Built by the **Turing Tree** team:
 
 - **Turing Tree (RagIndex)** is released under the **MIT License** — see
   [LICENSE](LICENSE). © 2026 Subhransu S. Bhattacharjee, Himanshu Singh,
-  Yeredla Koushik Reddy, and Jayesh RL.
+  Yeredla Koushik Reddy, and Jayesh RL. Developed as part of the
+  **Microsoft Global Intern Hackathon 2026**.
 - **PageIndex** (`vendor/PageIndex/`) is the upstream
   [VectifyAI/PageIndex](https://github.com/VectifyAI/PageIndex) project — its own
   git repository, kept **out of ours** (it's in [.gitignore](.gitignore)) so our
