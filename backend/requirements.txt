@@ -15,7 +15,10 @@
 # plus the index built once via POST /api/index/build. It pulls litellm and the
 # PageIndex deps from the root requirements.txt — nothing extra to pin here.
 
-fastapi==0.115.0
+fastapi==0.141.1
+# Explicit security floor/pin: older transitive Starlette releases have known
+# request-processing and multipart vulnerabilities.
+starlette==1.4.1
 uvicorn[standard]==0.30.6
 
 # Multipart form parsing for file uploads (POST /api/index/build and /api/ingest).
