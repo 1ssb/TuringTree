@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
           // download the WebGL (ogl) or markdown code — those load on demand with
           // the /upload and /chat routes.
           manualChunks: {
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-react": ["react", "react-dom", "react-router"],
             "vendor-webgl": ["ogl"],
             "vendor-markdown": ["react-markdown", "remark-gfm"],
           },

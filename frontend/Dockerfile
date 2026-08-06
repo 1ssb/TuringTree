@@ -3,7 +3,7 @@
 # RagIndex frontend — built with Vite, then served as static files by nginx,
 # which also reverse-proxies "/api/..." to the backend service.
 #
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

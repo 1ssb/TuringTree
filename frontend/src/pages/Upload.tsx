@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { FolderUp, FileUp, ArrowRight, Check, Lock, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
