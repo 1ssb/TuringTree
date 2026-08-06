@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router";
 
 // Code-split each route. A visitor landing on "/" should not have to download
 // the WebGL bundle (ogl, used only on /upload) or the markdown renderer
